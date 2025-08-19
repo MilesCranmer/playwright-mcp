@@ -40,16 +40,17 @@ const selectTab = defineTool({
   schema: {
     name: 'browser_tab_select',
     title: 'Select a tab',
-    description: 'Select a tab by index',
+    description: 'Select a tab by index. By default shows only interactive elements.',
     inputSchema: z.object({
       index: z.number().describe('The index of the tab to select'),
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
     }),
     type: 'readOnly',
   },
 
   handle: async (context, params, response) => {
     await context.selectTab(params.index);
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
   },
 });
 
@@ -59,9 +60,10 @@ const newTab = defineTool({
   schema: {
     name: 'browser_tab_new',
     title: 'Open a new tab',
-    description: 'Open a new tab',
+    description: 'Open a new tab. By default shows only interactive elements.',
     inputSchema: z.object({
       url: z.string().optional().describe('The URL to navigate to in the new tab. If not provided, the new tab will be blank.'),
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
     }),
     type: 'readOnly',
   },
@@ -70,7 +72,7 @@ const newTab = defineTool({
     const tab = await context.newTab();
     if (params.url)
       await tab.navigate(params.url);
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
   },
 });
 
@@ -80,16 +82,17 @@ const closeTab = defineTool({
   schema: {
     name: 'browser_tab_close',
     title: 'Close a tab',
-    description: 'Close a tab',
+    description: 'Close a tab. By default shows only interactive elements.',
     inputSchema: z.object({
       index: z.number().optional().describe('The index of the tab to close. Closes current tab if not provided.'),
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
     }),
     type: 'destructive',
   },
 
   handle: async (context, params, response) => {
     await context.closeTab(params.index);
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
   },
 });
 

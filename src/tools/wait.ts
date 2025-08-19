@@ -23,11 +23,12 @@ const wait = defineTool({
   schema: {
     name: 'browser_wait_for',
     title: 'Wait for',
-    description: 'Wait for text to appear or disappear or a specified time to pass',
+    description: 'Wait for text to appear or disappear or a specified time to pass. By default shows only interactive elements.',
     inputSchema: z.object({
       time: z.number().optional().describe('The time to wait in seconds'),
       text: z.string().optional().describe('The text to wait for'),
       textGone: z.string().optional().describe('The text to wait for to disappear'),
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
     }),
     type: 'readOnly',
   },
@@ -56,7 +57,7 @@ const wait = defineTool({
     }
 
     response.addResult(`Waited for ${params.text || params.textGone || params.time}`);
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
   },
 });
 

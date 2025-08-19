@@ -1,3 +1,9 @@
+## Fork Notice
+
+This is a fork of the official Playwright MCP server with simple token efficiency improvements.
+All browser tools now default to showing only interactive elements (links, buttons, forms) instead of full page content.
+Use the `full=true` parameter to see complete page content when needed.
+
 ## Playwright MCP
 
 A Model Context Protocol (MCP) server that provides browser automation capabilities using [Playwright](https://playwright.dev). This server enables LLMs to interact with web pages through structured accessibility snapshots, bypassing the need for screenshots or visually-tuned models.
@@ -501,25 +507,28 @@ http.createServer(async (req, res) => {
 
 - **browser_navigate**
   - Title: Navigate to a URL
-  - Description: Navigate to a URL
+  - Description: Navigate to a URL. By default shows only interactive elements (links, buttons, form inputs) for token efficiency. Use full=true to see complete page content.
   - Parameters:
     - `url` (string): The URL to navigate to
+    - `full` (boolean, optional): Show full page content instead of just interactive elements (default: false)
   - Read-only: **false**
 
 <!-- NOTE: This has been generated via update-readme.js -->
 
 - **browser_navigate_back**
   - Title: Go back
-  - Description: Go back to the previous page
-  - Parameters: None
+  - Description: Go back to the previous page. By default shows only interactive elements.
+  - Parameters:
+    - `full` (boolean, optional): Show full page content instead of just interactive elements (default: false)
   - Read-only: **true**
 
 <!-- NOTE: This has been generated via update-readme.js -->
 
 - **browser_navigate_forward**
   - Title: Go forward
-  - Description: Go forward to the next page
-  - Parameters: None
+  - Description: Go forward to the next page. By default shows only interactive elements.
+  - Parameters:
+    - `full` (boolean, optional): Show full page content instead of just interactive elements (default: false)
   - Read-only: **true**
 
 <!-- NOTE: This has been generated via update-readme.js -->
@@ -564,8 +573,9 @@ http.createServer(async (req, res) => {
 
 - **browser_snapshot**
   - Title: Page snapshot
-  - Description: Capture accessibility snapshot of the current page, this is better than screenshot
-  - Parameters: None
+  - Description: Capture accessibility snapshot of the current page. By default shows only interactive elements (links, buttons, form inputs) for token efficiency. Use full=true to see complete page content.
+  - Parameters:
+    - `full` (boolean, optional): Show full page content instead of just interactive elements (default: false)
   - Read-only: **true**
 
 <!-- NOTE: This has been generated via update-readme.js -->
@@ -598,11 +608,12 @@ http.createServer(async (req, res) => {
 
 - **browser_wait_for**
   - Title: Wait for
-  - Description: Wait for text to appear or disappear or a specified time to pass
+  - Description: Wait for text to appear or disappear or a specified time to pass. By default shows only interactive elements.
   - Parameters:
     - `time` (number, optional): The time to wait in seconds
     - `text` (string, optional): The text to wait for
     - `textGone` (string, optional): The text to wait for to disappear
+    - `full` (boolean, optional): Show full page content instead of just interactive elements (default: false)
   - Read-only: **true**
 
 </details>
@@ -614,9 +625,10 @@ http.createServer(async (req, res) => {
 
 - **browser_tab_close**
   - Title: Close a tab
-  - Description: Close a tab
+  - Description: Close a tab. By default shows only interactive elements.
   - Parameters:
     - `index` (number, optional): The index of the tab to close. Closes current tab if not provided.
+    - `full` (boolean, optional): Show full page content instead of just interactive elements (default: false)
   - Read-only: **false**
 
 <!-- NOTE: This has been generated via update-readme.js -->
@@ -631,18 +643,20 @@ http.createServer(async (req, res) => {
 
 - **browser_tab_new**
   - Title: Open a new tab
-  - Description: Open a new tab
+  - Description: Open a new tab. By default shows only interactive elements.
   - Parameters:
     - `url` (string, optional): The URL to navigate to in the new tab. If not provided, the new tab will be blank.
+    - `full` (boolean, optional): Show full page content instead of just interactive elements (default: false)
   - Read-only: **true**
 
 <!-- NOTE: This has been generated via update-readme.js -->
 
 - **browser_tab_select**
   - Title: Select a tab
-  - Description: Select a tab by index
+  - Description: Select a tab by index. By default shows only interactive elements.
   - Parameters:
     - `index` (number): The index of the tab to select
+    - `full` (boolean, optional): Show full page content instead of just interactive elements (default: false)
   - Read-only: **true**
 
 </details>

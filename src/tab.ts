@@ -251,11 +251,56 @@ export class Tab extends EventEmitter<TabEventsInterface> {
 
   async refLocators(params: { element: string, ref: string }[]): Promise<playwright.Locator[]> {
     const snapshot = await (this.page as PageEx)._snapshotForAI();
-    return params.map(param => {
-      if (!snapshot.includes(`[ref=${param.ref}]`))
-        throw new Error(`Ref ${param.ref} not found in the current page snapshot. Try capturing new snapshot.`);
-      return this.page.locator(`aria-ref=${param.ref}`).describe(param.element);
-    });
+    const locators = [];
+
+    for (const param of params) {
+      if (!snapshot.includes(`[ref=${param.ref}]`)) {
+        // Try to find a similar element by aria-label or text content
+        const locator = await this._findElementByDescription(param.element);
+        if (locator)
+          locators.push(locator);
+        else
+          throw new Error(`Ref ${param.ref} not found in the current page snapshot. Try capturing new snapshot.`);
+      } else {
+        locators.push(this.page.locator(`aria-ref=${param.ref}`).describe(param.element));
+      }
+    }
+
+    return locators;
+  }
+
+  private async _findElementByDescription(elementDescription: string): Promise<playwright.Locator | null> {
+    // Extract element type and text from description like 'link "README"' or 'button "Submit"'
+    const match = elementDescription.match(/^(\w+)\s+"([^"]+)"/);
+    if (!match)
+      return null;
+
+    const [, elementType, text] = match;
+
+    try {
+      // Try different locator strategies based on element type
+      switch (elementType.toLowerCase()) {
+        case 'link':
+          return this.page.getByRole('link', { name: text });
+        case 'button':
+          return this.page.getByRole('button', { name: text });
+        case 'textbox':
+          return this.page.getByRole('textbox', { name: text });
+        case 'checkbox':
+          return this.page.getByRole('checkbox', { name: text });
+        case 'radio':
+          return this.page.getByRole('radio', { name: text });
+        case 'combobox':
+          return this.page.getByRole('combobox', { name: text });
+        case 'heading':
+          return this.page.getByRole('heading', { name: text });
+        default:
+          // Fallback: try to find by text content
+          return this.page.getByText(text);
+      }
+    } catch {
+      return null;
+    }
   }
 
   async waitForTimeout(time: number) {

@@ -25,14 +25,16 @@ const snapshot = defineTool({
   schema: {
     name: 'browser_snapshot',
     title: 'Page snapshot',
-    description: 'Capture accessibility snapshot of the current page, this is better than screenshot',
-    inputSchema: z.object({}),
+    description: 'Capture accessibility snapshot of the current page. By default shows only interactive elements (links, buttons, form inputs) for token efficiency. Use full=true to see complete page content.',
+    inputSchema: z.object({
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
+    }),
     type: 'readOnly',
   },
 
   handle: async (context, params, response) => {
     await context.ensureTab();
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
   },
 });
 
@@ -44,6 +46,7 @@ export const elementSchema = z.object({
 const clickSchema = elementSchema.extend({
   doubleClick: z.boolean().optional().describe('Whether to perform a double click instead of a single click'),
   button: z.enum(['left', 'right', 'middle']).optional().describe('Button to click, defaults to left'),
+  full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
 });
 
 const click = defineTabTool({
@@ -51,13 +54,13 @@ const click = defineTabTool({
   schema: {
     name: 'browser_click',
     title: 'Click',
-    description: 'Perform click on a web page',
+    description: 'Perform click on a web page. By default shows only interactive elements.',
     inputSchema: clickSchema,
     type: 'destructive',
   },
 
   handle: async (tab, params, response) => {
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
 
     const locator = await tab.refLocator(params);
     const button = params.button;
@@ -83,18 +86,19 @@ const drag = defineTabTool({
   schema: {
     name: 'browser_drag',
     title: 'Drag mouse',
-    description: 'Perform drag and drop between two elements',
+    description: 'Perform drag and drop between two elements. By default shows only interactive elements.',
     inputSchema: z.object({
       startElement: z.string().describe('Human-readable source element description used to obtain the permission to interact with the element'),
       startRef: z.string().describe('Exact source element reference from the page snapshot'),
       endElement: z.string().describe('Human-readable target element description used to obtain the permission to interact with the element'),
       endRef: z.string().describe('Exact target element reference from the page snapshot'),
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
     }),
     type: 'destructive',
   },
 
   handle: async (tab, params, response) => {
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
 
     const [startLocator, endLocator] = await tab.refLocators([
       { ref: params.startRef, element: params.startElement },
@@ -114,13 +118,15 @@ const hover = defineTabTool({
   schema: {
     name: 'browser_hover',
     title: 'Hover mouse',
-    description: 'Hover over element on page',
-    inputSchema: elementSchema,
+    description: 'Hover over element on page. By default shows only interactive elements.',
+    inputSchema: elementSchema.extend({
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
+    }),
     type: 'readOnly',
   },
 
   handle: async (tab, params, response) => {
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
 
     const locator = await tab.refLocator(params);
     response.addCode(`await page.${await generateLocator(locator)}.hover();`);
@@ -133,6 +139,7 @@ const hover = defineTabTool({
 
 const selectOptionSchema = elementSchema.extend({
   values: z.array(z.string()).describe('Array of values to select in the dropdown. This can be a single value or multiple values.'),
+  full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
 });
 
 const selectOption = defineTabTool({
@@ -140,13 +147,13 @@ const selectOption = defineTabTool({
   schema: {
     name: 'browser_select_option',
     title: 'Select option',
-    description: 'Select an option in a dropdown',
+    description: 'Select an option in a dropdown. By default shows only interactive elements.',
     inputSchema: selectOptionSchema,
     type: 'destructive',
   },
 
   handle: async (tab, params, response) => {
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
 
     const locator = await tab.refLocator(params);
     response.addCode(`await page.${await generateLocator(locator)}.selectOption(${javascript.formatObject(params.values)});`);

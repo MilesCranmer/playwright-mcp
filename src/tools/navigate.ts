@@ -23,9 +23,10 @@ const navigate = defineTool({
   schema: {
     name: 'browser_navigate',
     title: 'Navigate to a URL',
-    description: 'Navigate to a URL',
+    description: 'Navigate to a URL. By default shows only interactive elements (links, buttons, form inputs) for token efficiency. Use full=true to see complete page content.',
     inputSchema: z.object({
       url: z.string().describe('The URL to navigate to'),
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
     }),
     type: 'destructive',
   },
@@ -34,7 +35,7 @@ const navigate = defineTool({
     const tab = await context.ensureTab();
     await tab.navigate(params.url);
 
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
     response.addCode(`await page.goto('${params.url}');`);
   },
 });
@@ -44,14 +45,16 @@ const goBack = defineTabTool({
   schema: {
     name: 'browser_navigate_back',
     title: 'Go back',
-    description: 'Go back to the previous page',
-    inputSchema: z.object({}),
+    description: 'Go back to the previous page. By default shows only interactive elements.',
+    inputSchema: z.object({
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
+    }),
     type: 'readOnly',
   },
 
   handle: async (tab, params, response) => {
     await tab.page.goBack();
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
     response.addCode(`await page.goBack();`);
   },
 });
@@ -61,13 +64,15 @@ const goForward = defineTabTool({
   schema: {
     name: 'browser_navigate_forward',
     title: 'Go forward',
-    description: 'Go forward to the next page',
-    inputSchema: z.object({}),
+    description: 'Go forward to the next page. By default shows only interactive elements.',
+    inputSchema: z.object({
+      full: z.boolean().optional().describe('Show full page content instead of just interactive elements (default: false)'),
+    }),
     type: 'readOnly',
   },
   handle: async (tab, params, response) => {
     await tab.page.goForward();
-    response.setIncludeSnapshot();
+    response.setIncludeSnapshot(params.full || false);
     response.addCode(`await page.goForward();`);
   },
 });

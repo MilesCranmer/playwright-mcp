@@ -28,6 +28,7 @@ export class Response {
   private _includeSnapshot = false;
   private _includeTabs = false;
   private _tabSnapshot: TabSnapshot | undefined;
+  private _fullSnapshot = false;
 
   readonly toolName: string;
   readonly toolArgs: Record<string, any>;
@@ -72,8 +73,9 @@ export class Response {
     return this._images;
   }
 
-  setIncludeSnapshot() {
+  setIncludeSnapshot(full: boolean = false) {
     this._includeSnapshot = true;
+    this._fullSnapshot = full;
   }
 
   setIncludeTabs() {
@@ -121,7 +123,7 @@ ${this._code.join('\n')}
       response.push(...renderModalStates(this._context, this._tabSnapshot.modalStates));
       response.push('');
     } else if (this._tabSnapshot) {
-      response.push(renderTabSnapshot(this._tabSnapshot));
+      response.push(renderTabSnapshot(this._tabSnapshot, this._fullSnapshot));
       response.push('');
     }
 
@@ -140,7 +142,7 @@ ${this._code.join('\n')}
   }
 }
 
-function renderTabSnapshot(tabSnapshot: TabSnapshot): string {
+function renderTabSnapshot(tabSnapshot: TabSnapshot, full: boolean = false): string {
   const lines: string[] = [];
 
   if (tabSnapshot.consoleMessages.length) {
@@ -164,12 +166,45 @@ function renderTabSnapshot(tabSnapshot: TabSnapshot): string {
   lines.push(`### Page state`);
   lines.push(`- Page URL: ${tabSnapshot.url}`);
   lines.push(`- Page Title: ${tabSnapshot.title}`);
-  lines.push(`- Page Snapshot:`);
-  lines.push('```yaml');
-  lines.push(tabSnapshot.ariaSnapshot);
-  lines.push('```');
+
+  if (full) {
+    lines.push(`- Page Snapshot:`);
+    lines.push('```yaml');
+    lines.push(tabSnapshot.ariaSnapshot);
+    lines.push('```');
+  } else {
+    // Condensed mode: only show interactive elements
+    const interactiveElements = extractInteractiveElements(tabSnapshot.ariaSnapshot);
+    if (interactiveElements.trim()) {
+      lines.push('- Interactive Elements:');
+      lines.push('```yaml');
+      lines.push(interactiveElements);
+      lines.push('```');
+    } else {
+      lines.push('- No interactive elements found');
+    }
+  }
 
   return lines.join('\n');
+}
+
+function extractInteractiveElements(ariaSnapshot: string): string {
+  const lines = ariaSnapshot.split('\n');
+  const interactiveLines: string[] = [];
+
+  for (const line of lines) {
+    // Extract clickable elements (links, buttons)
+    if (line.match(/- (link "[^"]*") \[ref=([^\]]+)\]/) ||
+        line.match(/- (button "[^"]*") \[ref=([^\]]+)\]/) ||
+        line.match(/- (textbox "[^"]*") \[ref=([^\]]+)\]/) ||
+        line.match(/- (checkbox "[^"]*") \[ref=([^\]]+)\]/) ||
+        line.match(/- (radio "[^"]*") \[ref=([^\]]+)\]/) ||
+        line.match(/- (combobox "[^"]*") \[ref=([^\]]+)\]/) ||
+        line.match(/- (heading "[^"]*") \[level=\d+\] \[ref=([^\]]+)\]/))
+      interactiveLines.push(line);
+  }
+
+  return interactiveLines.join('\n');
 }
 
 function renderTabsMarkdown(tabs: Tab[], force: boolean = false): string[] {
